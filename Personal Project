@@ -1,0 +1,247 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Web Extraction-Selenium+YahooFinance.ipynb",
+      "provenance": [],
+      "authorship_tag": "ABX9TyOvJJ6h2RXiYcF41furKD2w",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/varunsawhney8/varunsawhney8/blob/main/Personal%20Project\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "DCpkArwgfEgB"
+      },
+      "source": [
+        "Project Goal: Extract News Headlines from any news portal with the help of Selenium and also extract the stock price data for the extracted news dates."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "x7i1lUK0dTg9",
+        "outputId": "a253fb30-a9da-44bf-90a8-2a58c2f578d0"
+      },
+      "source": [
+        "!pip install selenium\n",
+        "!pip install yfinance\n",
+        "\n",
+        "!apt-get update # to update ubuntu to correctly run apt install\n",
+        "!apt install chromium-chromedriver\n",
+        "!cp /usr/lib/chromium-browser/chromedriver /usr/bin\n",
+        "import sys\n",
+        "sys.path.insert(0,'/usr/lib/chromium-browser/chromedriver')\n",
+        "from selenium import webdriver\n",
+        "chrome_options = webdriver.ChromeOptions()\n",
+        "chrome_options.add_argument('--headless')\n",
+        "chrome_options.add_argument('--no-sandbox')\n",
+        "chrome_options.add_argument('--disable-dev-shm-usage')\n",
+        "driver = webdriver.Chrome('chromedriver',chrome_options=chrome_options)"
+      ],
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/\n",
+            "Requirement already satisfied: selenium in /usr/local/lib/python3.7/dist-packages (4.4.3)\n",
+            "Requirement already satisfied: certifi>=2021.10.8 in /usr/local/lib/python3.7/dist-packages (from selenium) (2022.6.15)\n",
+            "Requirement already satisfied: urllib3[socks]~=1.26 in /usr/local/lib/python3.7/dist-packages (from selenium) (1.26.12)\n",
+            "Requirement already satisfied: trio-websocket~=0.9 in /usr/local/lib/python3.7/dist-packages (from selenium) (0.9.2)\n",
+            "Requirement already satisfied: trio~=0.17 in /usr/local/lib/python3.7/dist-packages (from selenium) (0.21.0)\n",
+            "Requirement already satisfied: sniffio in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (1.3.0)\n",
+            "Requirement already satisfied: attrs>=19.2.0 in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (22.1.0)\n",
+            "Requirement already satisfied: async-generator>=1.9 in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (1.10)\n",
+            "Requirement already satisfied: idna in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (2.10)\n",
+            "Requirement already satisfied: sortedcontainers in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (2.4.0)\n",
+            "Requirement already satisfied: outcome in /usr/local/lib/python3.7/dist-packages (from trio~=0.17->selenium) (1.2.0)\n",
+            "Requirement already satisfied: wsproto>=0.14 in /usr/local/lib/python3.7/dist-packages (from trio-websocket~=0.9->selenium) (1.2.0)\n",
+            "Requirement already satisfied: PySocks!=1.5.7,<2.0,>=1.5.6 in /usr/local/lib/python3.7/dist-packages (from urllib3[socks]~=1.26->selenium) (1.7.1)\n",
+            "Requirement already satisfied: h11<1,>=0.9.0 in /usr/local/lib/python3.7/dist-packages (from wsproto>=0.14->trio-websocket~=0.9->selenium) (0.13.0)\n",
+            "Requirement already satisfied: typing-extensions in /usr/local/lib/python3.7/dist-packages (from h11<1,>=0.9.0->wsproto>=0.14->trio-websocket~=0.9->selenium) (4.1.1)\n",
+            "Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/\n",
+            "Requirement already satisfied: yfinance in /usr/local/lib/python3.7/dist-packages (0.1.74)\n",
+            "Requirement already satisfied: multitasking>=0.0.7 in /usr/local/lib/python3.7/dist-packages (from yfinance) (0.0.11)\n",
+            "Requirement already satisfied: lxml>=4.5.1 in /usr/local/lib/python3.7/dist-packages (from yfinance) (4.9.1)\n",
+            "Requirement already satisfied: pandas>=0.24.0 in /usr/local/lib/python3.7/dist-packages (from yfinance) (1.3.5)\n",
+            "Requirement already satisfied: numpy>=1.15 in /usr/local/lib/python3.7/dist-packages (from yfinance) (1.21.6)\n",
+            "Requirement already satisfied: requests>=2.26 in /usr/local/lib/python3.7/dist-packages (from yfinance) (2.28.1)\n",
+            "Requirement already satisfied: python-dateutil>=2.7.3 in /usr/local/lib/python3.7/dist-packages (from pandas>=0.24.0->yfinance) (2.8.2)\n",
+            "Requirement already satisfied: pytz>=2017.3 in /usr/local/lib/python3.7/dist-packages (from pandas>=0.24.0->yfinance) (2022.2.1)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.7/dist-packages (from python-dateutil>=2.7.3->pandas>=0.24.0->yfinance) (1.15.0)\n",
+            "Requirement already satisfied: urllib3<1.27,>=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests>=2.26->yfinance) (1.26.12)\n",
+            "Requirement already satisfied: charset-normalizer<3,>=2 in /usr/local/lib/python3.7/dist-packages (from requests>=2.26->yfinance) (2.1.1)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.7/dist-packages (from requests>=2.26->yfinance) (2.10)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from requests>=2.26->yfinance) (2022.6.15)\n",
+            "Hit:1 http://archive.ubuntu.com/ubuntu bionic InRelease\n",
+            "Get:2 http://archive.ubuntu.com/ubuntu bionic-updates InRelease [88.7 kB]\n",
+            "Hit:3 https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/ InRelease\n",
+            "Get:4 http://security.ubuntu.com/ubuntu bionic-security InRelease [88.7 kB]\n",
+            "Hit:5 http://ppa.launchpad.net/c2d4u.team/c2d4u4.0+/ubuntu bionic InRelease\n",
+            "Get:6 http://archive.ubuntu.com/ubuntu bionic-backports InRelease [74.6 kB]\n",
+            "Hit:7 http://ppa.launchpad.net/cran/libgit2/ubuntu bionic InRelease\n",
+            "Hit:8 http://ppa.launchpad.net/deadsnakes/ppa/ubuntu bionic InRelease\n",
+            "Hit:9 http://ppa.launchpad.net/graphics-drivers/ppa/ubuntu bionic InRelease\n",
+            "Ign:10 https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64  InRelease\n",
+            "Hit:11 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64  InRelease\n",
+            "Hit:12 https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64  Release\n",
+            "Fetched 252 kB in 2s (103 kB/s)\n",
+            "Reading package lists... Done\n",
+            "Reading package lists... Done\n",
+            "Building dependency tree       \n",
+            "Reading state information... Done\n",
+            "chromium-chromedriver is already the newest version (104.0.5112.101-0ubuntu0.18.04.1).\n",
+            "The following package was automatically installed and is no longer required:\n",
+            "  libnvidia-common-460\n",
+            "Use 'apt autoremove' to remove it.\n",
+            "0 upgraded, 0 newly installed, 0 to remove and 25 not upgraded.\n",
+            "cp: '/usr/lib/chromium-browser/chromedriver' and '/usr/bin/chromedriver' are the same file\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/usr/local/lib/python3.7/dist-packages/ipykernel_launcher.py:14: DeprecationWarning: use options instead of chrome_options\n",
+            "  \n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "No1u9W_OdaED"
+      },
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "from selenium import webdriver\n",
+        "import time\n",
+        "import yfinance as yf\n",
+        "\n",
+        "\n",
+        "\n"
+      ],
+      "execution_count": 9,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "bmCkMJjPeNMG"
+      },
+      "source": [
+        "company={ 1: ['INFOSYS','INFY.NS'], 2:['TCS','TCS.NS'] , 3: ['RELIANCE INDUSTRIES','RELIANCE.NS'],\n",
+        "4: ['ICICI BANK','ICICIBANK.NS'] , 5: ['HDFC BANK','HDFCBANK.NS'], 6: ['HDFC','HDFC.NS'],\n",
+        "7:['BHARTI AIRTEL','BHARTIARTL.NS'],  8: ['Wipro','WIPRO.NS'], 9: ['SBI','SBIN.NS'],\n",
+        "10: ['Yes Bank','YESBANK.NS'],11:['Tata Motors','TATAMOTORS.NS'],12:['Vodafone Idea','IDEA.NS'],\n",
+        "13:['PNB','PNB.NS'], 14: ['MARUTI SUZUKI','MARUTI.NS'],15:['ONGC','ONGC.NS'],\n",
+        "16: ['TATA STEEL','TATASTEEL.NS'], 17: ['NTPC','NTPC.NS'] }\n",
+        "\n"
+      ],
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "for companycode in company.items():\n",
+        "  print(companycode[1][1])"
+      ],
+      "metadata": {
+        "id": "6jo9LSlWpENi",
+        "outputId": "eb2f5b36-6c76-4376-9878-e9494bddc6f8",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 16,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "INFY.NS\n",
+            "TCS.NS\n",
+            "RELIANCE.NS\n",
+            "ICICIBANK.NS\n",
+            "HDFCBANK.NS\n",
+            "HDFC.NS\n",
+            "BHARTIARTL.NS\n",
+            "WIPRO.NS\n",
+            "SBIN.NS\n",
+            "YESBANK.NS\n",
+            "TATAMOTORS.NS\n",
+            "IDEA.NS\n",
+            "PNB.NS\n",
+            "MARUTI.NS\n",
+            "ONGC.NS\n",
+            "TATASTEEL.NS\n",
+            "NTPC.NS\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 235
+        },
+        "id": "AN3vvXJbdraG",
+        "outputId": "8f73c34b-18c4-43b7-c1de-17860b3c549f"
+      },
+      "source": [
+        "#### Yahoo Finance Data\n",
+        "## company stock price data\n",
+        "\n",
+        "fin_data = yf.download(company_stock_code, start=list3[-1], end=list3[0])\n",
+        "fin_data =fin_data[[\"Close\"]]\n",
+        "    \n",
+        "fin_data=fin_data.reset_index()\n",
+        "fin_data['Date']=[str(fin_data['Date'][i].date()) for  i in range(len(fin_data))]\n",
+        "fin_data.tail()"
+      ],
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "NameError",
+          "evalue": "ignored",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+            "\u001b[0;32m<ipython-input-5-92791fb92930>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[0;31m## company stock price data\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 4\u001b[0;31m \u001b[0mfin_data\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0myf\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdownload\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcompany_stock_code\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mstart\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mlist3\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m-\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mend\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mlist3\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      5\u001b[0m \u001b[0mfin_data\u001b[0m \u001b[0;34m=\u001b[0m\u001b[0mfin_data\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m\"Close\"\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      6\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mNameError\u001b[0m: name 'list3' is not defined"
+          ]
+        }
+      ]
+    }
+  ]
+}
